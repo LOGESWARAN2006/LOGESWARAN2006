@@ -1,0 +1,15 @@
+{
+  "name": "Panimalar Placement Portal",
+  "description": "Comprehensive full-stack placement preparation portal with AI interview bot, coding sandbox, resume analyzer, and gamified dashboards.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API",
+    "AI-powered resume analysis",
+    "Real-time coding sandbox",
+    "Gamified student progress tracking",
+    "Admin/Faculty analytics dashboard"
+  ]
+}

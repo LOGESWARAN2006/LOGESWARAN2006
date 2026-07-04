@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ---------------------------------------------------------
+    // GLOBALS & HELPERS
+    // ---------------------------------------------------------
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token != null && 
+             request.auth.token.email != null && (
+               request.auth.token.email.lower() == 'mageshwaranss24@gmail.com' ||
+               request.auth.token.email.lower() == 'admin@panimalar.edu.in' ||
+               request.auth.token.email.lower().matches('.*admin@.*')
+             );
+    }
+
+    function isFaculty() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'FACULTY';
+    }
+
+    function isLocalAuth(userId) {
+      return userId is string && userId.size() > 3 && userId.startsWith('id_');
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isAuthenticated() {
+      return isSignedIn(); 
+    }
+
+    // ---------------------------------------------------------
+    // ENTITY VALIDATORS
+    // ---------------------------------------------------------
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) && 
+             data.uid is string && 
+             data.email is string &&
+             data.role in ['STUDENT', 'FACULTY', 'ADMIN'];
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasAll(['type', 'message', 'timestamp']) &&
+             data.type is string &&
+             data.message is string &&
+             data.message.size() <= 1000;
+    }
+
+    // ---------------------------------------------------------
+    // COLLECTIONS
+    // ---------------------------------------------------------
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow read: if true; 
+      allow create: if true; 
+      allow update: if (request.auth == null) || isOwner(userId) || isAdmin(); 
+      allow delete: if (request.auth == null) || isAdmin();
+    }
+
+    // PROBLEMS COLLECTION
+    match /problems/{problemId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin() || isFaculty();
+    }
+
+    // QUESTIONS COLLECTION
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin() || isFaculty();
+    }
+
+    // SUBMISSIONS COLLECTION
+    match /submissions/{submissionId} {
+      allow get: if true;
+      allow list: if true; 
+      allow create: if true;
+      allow update: if (request.auth == null) || isAdmin(); 
+      allow delete: if (request.auth == null) || isAdmin();
+    }
+
+    // ADMINS (READ-ONLY LOOKUP)
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin(); 
+    }
+
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // OTPS COLLECTION (Verification Codes)
+    match /otps/{email} {
+      allow read, write: if true; 
+    }
+
+    // LOGS COLLECTION
+    match /logs/{logId} {
+      allow read: if (request.auth == null) || isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if true; 
+    }
+
+    // SUBJECT TESTS
+    match /subject_tests/{testId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin() || isFaculty();
+    }
+
+    // TEST RESULTS
+    match /test_results/{resultId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if (request.auth == null) || isAdmin();
+    }
+
+    // RESOURCES
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin() || isFaculty();
+    }
+
+    // CORPORATE DATA
+    match /companies/{companyId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin();
+    }
+
+    match /job_postings/{jobId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin();
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin();
+    }
+
+    match /config/{document=**} {
+      allow read: if true;
+      allow write: if (request.auth == null) || isAdmin();
+    }
+  }
+}

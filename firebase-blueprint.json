@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores student and faculty profile data and aggregate stats.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["STUDENT", "FACULTY", "ADMIN"] },
+        "rollNo": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "codingScore": { "type": "number" },
+            "aptitudeScore": { "type": "number" },
+            "attendance": { "type": "number" },
+            "githubActivity": { "type": "number" },
+            "placementProbability": { "type": "number" }
+          }
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Question": {
+      "title": "Platform Question",
+      "description": "Questions for coding, aptitude, and verbal labs.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["coding", "mcq", "listening"] },
+        "category": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "number" },
+        "baseCode": { "type": "object" },
+        "testCases": { "type": "array" }
+      }
+    },
+    "Submission": {
+      "title": "User Submission",
+      "description": "Record of a student's attempt at a coding or aptitude question.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "score": { "type": "number" },
+        "status": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and aggregate metrics."
+    },
+    "/questions/{questionId}": {
+      "schema": { "$ref": "#/entities/Question" },
+      "description": "Global question bank."
+    },
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/Submission" },
+      "description": "Student submission history."
+    },
+    "/otps/{email}": {
+      "schema": "OTP",
+      "description": "Transient storage for verification codes."
+    },
+    "/logs/{logId}": {
+      "schema": "SystemLog",
+      "description": "System activity and audit logs."
+    },
+    "/subject_tests/{testId}": {
+      "schema": "SubjectTest",
+      "description": "Faculty-uploaded interview questions."
+    },
+    "/test_results/{resultId}": {
+      "schema": "TestResult",
+      "description": "Student results for subject tests."
+    },
+    "/resources/{resourceId}": {
+      "schema": "FacultyResource",
+      "description": "Learning materials uploaded by faculty."
+    },
+    "/companies/{companyId}": {
+      "schema": "Company",
+      "description": "Institutional corporate relations & recruiter database."
+    },
+    "/job_postings/{jobId}": {
+      "schema": "JobPosting",
+      "description": "Company job descriptions and recruitment offers."
+    },
+    "/schedules/{scheduleId}": {
+      "schema": "PlacementSchedule",
+      "description": "Campus interview and recruitment event scheduling."
+    },
+    "/config/{configId}": {
+      "schema": "SystemConfig",
+      "description": "AI engine weights and placement algorithm parameters."
+    }
+  }
+}
